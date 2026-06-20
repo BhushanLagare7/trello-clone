@@ -15,7 +15,7 @@ export const OrgControl = (): null => {
 
   // Update the active organization whenever the URL parameter changes
   useEffect(() => {
-    if (!setActive) return;
+    if (!setActive || !params.organizationId) return;
 
     setActive({ organization: params.organizationId });
   }, [params.organizationId, setActive]);

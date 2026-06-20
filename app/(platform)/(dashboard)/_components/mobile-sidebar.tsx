@@ -47,7 +47,7 @@ export const MobileSidebar = () => {
       </Button>
 
       {/* Mobile drawer overlay */}
-      <Sheet open={isOpen} onOpenChange={onClose}>
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <SheetContent className="p-2 pt-10" side="left">
           <Sidebar storageKey="t-sidebar-mobile-state" />
         </SheetContent>

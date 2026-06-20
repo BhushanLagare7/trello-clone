@@ -55,7 +55,7 @@ export const Sidebar = ({ storageKey = "t-sidebar-state" }: SidebarProps) => {
   const onExpand = (id: string) => {
     setExpanded((curr) => ({
       ...curr,
-      [id]: !expanded[id],
+      [id]: !curr[id],
     }));
   };
 
@@ -102,15 +102,26 @@ export const Sidebar = ({ storageKey = "t-sidebar-state" }: SidebarProps) => {
         defaultValue={defaultAccordionValue}
         type="multiple"
       >
-        {userMemberships.data.map(({ organization }) => (
-          <NavItem
-            key={organization.id}
-            isActive={activeOrganization?.id === organization.id}
-            isExpanded={expanded[organization.id]}
-            organization={organization as Organization}
-            onExpand={onExpand}
-          />
-        ))}
+        {userMemberships.data.map(({ organization }) => {
+          if (
+            !organization.id ||
+            !organization.slug ||
+            !organization.imageUrl ||
+            !organization.name
+          ) {
+            return null;
+          }
+
+          return (
+            <NavItem
+              key={organization.id}
+              isActive={activeOrganization?.id === organization.id}
+              isExpanded={expanded[organization.id]}
+              organization={organization as Organization}
+              onExpand={onExpand}
+            />
+          );
+        })}
       </Accordion>
     </>
   );
