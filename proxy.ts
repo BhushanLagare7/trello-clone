@@ -1,17 +1,43 @@
+import { NextResponse } from "next/server";
+
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Define public routes that do not require authentication
-const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)", "/"]);
+// Public routes
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/api/webhook",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
 
-// Protect all routes except public ones
 export default clerkMiddleware(async (auth, req) => {
-  // Skip authentication for public routes
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+  const authObject = await auth();
+  const { userId, orgId, redirectToSignIn } = authObject;
+
+  // If user is logged in and trying to access a public route (like '/' or sign-in)
+  if (userId && isPublicRoute(req)) {
+    let path = "/select-org";
+
+    if (orgId) {
+      path = `/organization/${orgId}`;
+    }
+
+    const orgSelection = new URL(path, req.url);
+    return NextResponse.redirect(orgSelection);
+  }
+
+  // If user is not logged in and trying to access a protected route
+  if (!userId && !isPublicRoute(req)) {
+    return redirectToSignIn({ returnBackUrl: req.url });
+  }
+
+  // If user is logged in but doesn't have an org selected, and is not already on the select-org page
+  if (userId && !orgId && req.nextUrl.pathname !== "/select-org") {
+    const orgSelection = new URL("/select-org", req.url);
+    return NextResponse.redirect(orgSelection);
   }
 });
 
-// Match all routes except public ones
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
