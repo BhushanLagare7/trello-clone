@@ -1,0 +1,58 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { auth } from "@clerk/nextjs/server";
+
+import { createSafeAction } from "@/lib/create-safe-action";
+import { db } from "@/lib/db";
+
+import { DeleteBoard } from "./schema";
+import { InputType, ReturnType } from "./types";
+
+/**
+ * Server action handler for deleting a board.
+ * Validates authentication, deletes the board from the database,
+ * and redirects the user to the organization page on success.
+ *
+ * @param data - Validated input containing the board `id` to delete
+ * @returns An error message on failure, or redirects on success
+ */
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = await auth();
+
+  // Reject requests from unauthenticated or org-less users
+  if (!userId || !orgId) {
+    return {
+      error: "Unauthorized",
+    };
+  }
+
+  const { id } = data;
+
+  try {
+    // Delete the board, scoped to the current org to prevent unauthorized deletion
+    await db.board.delete({
+      where: {
+        id,
+        orgId,
+      },
+    });
+  } catch {
+    return {
+      error: "Failed to delete.",
+    };
+  }
+
+  // Revalidate the organization page cache to remove the deleted board
+  revalidatePath(`/organization/${orgId}`);
+  // Redirect user back to the organization page after successful deletion
+  redirect(`/organization/${orgId}`);
+};
+
+/**
+ * Type-safe server action for deleting a board.
+ * Validates input against the DeleteBoard schema before invoking the handler.
+ */
+export const deleteBoard = createSafeAction(DeleteBoard, handler);

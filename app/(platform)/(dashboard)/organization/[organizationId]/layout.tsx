@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { formatOrgSlug } from "@/lib/utils";
+
 import { OrgControl } from "./_components/org-control";
 
 export async function generateMetadata(): Promise<{ title: string }> {
@@ -10,7 +12,7 @@ export async function generateMetadata(): Promise<{ title: string }> {
    * The title of the page is the organization slug, or "Organization" if not available.
    */
   return {
-    title: orgSlug ?? "Organization",
+    title: formatOrgSlug(orgSlug ?? "Organization"),
   };
 }
 
