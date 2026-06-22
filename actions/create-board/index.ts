@@ -49,6 +49,16 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
+  if (
+    !imageThumbUrl.startsWith("https://images.unsplash.com/") ||
+    !imageFullUrl.startsWith("https://images.unsplash.com/") ||
+    !imageLinkHTML.startsWith("https://unsplash.com/")
+  ) {
+    return {
+      error: "Invalid image metadata. Failed to create board.",
+    };
+  }
+
   let board;
 
   // Attempt to create the board in the database

@@ -49,10 +49,14 @@ export const useAction = <TInput, TOutput>(
         }
 
         // Data with success callback is set if present
-        if (result.data) {
+        if (result.data !== undefined) {
           setData(result.data);
           options.onSuccess?.(result.data);
         }
+      } catch (err) {
+        const errString = err instanceof Error ? err.message : "Something went wrong";
+        setError(errString);
+        options.onError?.(errString);
       } finally {
         setIsLoading(false);
         options.onComplete?.();

@@ -43,6 +43,7 @@ export const Navbar = () => {
         {/* "Create" icon button for mobile screens */}
         <FormPopover>
           <Button
+            aria-label="Create board"
             className="block rounded-sm md:hidden"
             size="sm"
             variant="primary"

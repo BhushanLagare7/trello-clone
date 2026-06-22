@@ -56,6 +56,9 @@ export const FormPicker = ({ id, errors }: FormPickerProps) => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
+        if (!unsplash) {
+          throw new Error("Unsplash API key not set");
+        }
         const { data, error } = await unsplash.GET("/photos/random", {
           params: {
             query: {

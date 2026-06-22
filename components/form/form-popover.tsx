@@ -93,6 +93,7 @@ export const FormPopover = ({
         {/* Close button to dismiss the popover */}
         <PopoverClose ref={closeRef} asChild>
           <Button
+            aria-label="Close"
             className="absolute top-2 right-2 size-auto p-2 text-neutral-600"
             variant="ghost"
           >
