@@ -24,7 +24,7 @@ interface BoardTitleFormProps {
  * @param data - The board object containing the current title and id
  */
 export const BoardTitleForm = ({ data }: BoardTitleFormProps) => {
-  const { execute } = useAction(updateBoard, {
+  const { execute, fieldErrors } = useAction(updateBoard, {
     // On success, show a toast, sync local title state, and exit edit mode
     onSuccess: (data) => {
       toast.success(`Board "${data.title}" updated!`);
@@ -89,6 +89,7 @@ export const BoardTitleForm = ({ data }: BoardTitleFormProps) => {
           ref={inputRef}
           className="h-7 border-none bg-transparent px-1.75 py-1 text-lg font-bold focus-visible:ring-transparent focus-visible:outline-none"
           defaultValue={title}
+          errors={fieldErrors}
           id="title"
           onBlur={onBlur}
         />

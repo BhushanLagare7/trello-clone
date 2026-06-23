@@ -28,7 +28,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  const { title, id } = data;
+  const id = data.id;
+  const title = data.title.trim();
   let board;
 
   try {

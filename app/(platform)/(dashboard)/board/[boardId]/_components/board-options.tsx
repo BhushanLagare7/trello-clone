@@ -43,7 +43,11 @@ export const BoardOptions = ({ id }: BoardOptionsProps) => {
     <Popover>
       {/* Trigger button — displays a horizontal dots icon */}
       <PopoverTrigger asChild>
-        <Button className="h-auto w-auto p-2" variant="transparent">
+        <Button
+          aria-label="Board options"
+          className="size-auto p-2"
+          variant="transparent"
+        >
           <MoreHorizontalIcon className="size-4" />
         </Button>
       </PopoverTrigger>
@@ -57,6 +61,7 @@ export const BoardOptions = ({ id }: BoardOptionsProps) => {
         {/* Close button positioned at the top-right of the popover */}
         <PopoverClose asChild>
           <Button
+            aria-label="Close board options"
             className="absolute top-2 right-2 h-auto w-auto p-2 text-neutral-600"
             variant="ghost"
           >
