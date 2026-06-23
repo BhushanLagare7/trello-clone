@@ -18,19 +18,20 @@ declare global {
 const dataSourceUrl = process.env.DATABASE_URL;
 if (!dataSourceUrl) throw new Error("DATABASE_URL is not set");
 
-// Append uselibpqcompat=1 to the connection string to fix pg v9.0.0 warning
+// Append uselibpqcompat=true to the connection string to fix pg v9.0.0 warning
 let poolConnectionString = dataSourceUrl;
 try {
   const url = new URL(dataSourceUrl);
   if (url.searchParams.get("sslmode") === "require") {
-    url.searchParams.set("uselibpqcompat", "1");
+    url.searchParams.set("uselibpqcompat", "true");
   }
   poolConnectionString = url.toString();
 } catch (e) {
   console.error("Failed to parse DATABASE_URL", e);
 }
 
-const pool = globalThis.pgPool || new Pool({ connectionString: poolConnectionString });
+const pool =
+  globalThis.pgPool || new Pool({ connectionString: poolConnectionString });
 if (process.env.NODE_ENV !== "production") globalThis.pgPool = pool;
 
 const adapter = new PrismaPg(pool);
