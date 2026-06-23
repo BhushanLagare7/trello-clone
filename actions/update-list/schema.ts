@@ -5,9 +5,10 @@ export const UpdateList = z.object({
     .string({
       error: "Title is required",
     })
+    .trim()
     .min(3, {
-      message: "Title is too short",
+      error: "Title is too short",
     }),
-  id: z.string(),
-  boardId: z.string(),
+  id: z.string().min(1, { error: "List id is required" }),
+  boardId: z.string().min(1, { error: "Board id is required" }),
 });

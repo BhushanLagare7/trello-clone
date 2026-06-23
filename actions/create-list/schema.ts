@@ -6,9 +6,9 @@ export const CreateList = z.object({
       error: "Title is required",
     })
     .min(3, {
-      message: "Title is too short",
+      error: "Title is too short",
     }),
   boardId: z.string().min(1, {
-    message: "Board ID is required",
+    error: "Board ID is required",
   }),
 });

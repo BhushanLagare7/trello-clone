@@ -34,17 +34,20 @@ export const ListOptions = ({ data, onAddCard }: ListOptionsProps) => {
   // Ref used to programmatically close the popover after an action completes
   const closeRef = useRef<ComponentRef<"button">>(null);
 
-  const { execute: executeDelete } = useAction(deleteList, {
-    onSuccess: (data) => {
-      toast.success(`List "${data.title}" deleted`);
-      closeRef.current?.click();
+  const { execute: executeDelete, isLoading: isDeleting } = useAction(
+    deleteList,
+    {
+      onSuccess: (data) => {
+        toast.success(`List "${data.title}" deleted`);
+        closeRef.current?.click();
+      },
+      onError: (error) => {
+        toast.error(error);
+      },
     },
-    onError: (error) => {
-      toast.error(error);
-    },
-  });
+  );
 
-  const { execute: executeCopy } = useAction(copyList, {
+  const { execute: executeCopy, isLoading: isCopying } = useAction(copyList, {
     onSuccess: (data) => {
       toast.success(`List "${data.title}" copied`);
       closeRef.current?.click();
@@ -56,6 +59,7 @@ export const ListOptions = ({ data, onAddCard }: ListOptionsProps) => {
 
   /** Extracts form fields and triggers the delete list action */
   const onDelete = (formData: FormData) => {
+    if (isDeleting) return;
     const id = formData.get("id") as string;
     const boardId = formData.get("boardId") as string;
 
@@ -64,6 +68,7 @@ export const ListOptions = ({ data, onAddCard }: ListOptionsProps) => {
 
   /** Extracts form fields and triggers the copy list action */
   const onCopy = (formData: FormData) => {
+    if (isCopying) return;
     const id = formData.get("id") as string;
     const boardId = formData.get("boardId") as string;
 
@@ -109,6 +114,7 @@ export const ListOptions = ({ data, onAddCard }: ListOptionsProps) => {
           />
           <FormSubmit
             className="h-auto w-full justify-start rounded-none px-5 text-sm font-normal"
+            disabled={isCopying}
             variant="ghost"
           >
             Copy list...
@@ -126,6 +132,7 @@ export const ListOptions = ({ data, onAddCard }: ListOptionsProps) => {
           />
           <FormSubmit
             className="h-auto w-full justify-start rounded-none px-5 text-sm font-normal"
+            disabled={isDeleting}
             variant="ghost"
           >
             Delete this list
