@@ -54,7 +54,7 @@ export const BoardOptions = ({ id }: BoardOptionsProps) => {
 
       <PopoverContent align="start" className="px-0 pt-3 pb-3" side="bottom">
         {/* Popover header label */}
-        <div className="pb-4 text-center text-sm font-medium text-neutral-600">
+        <div className="text-center text-sm font-medium text-neutral-600">
           Board actions
         </div>
 
@@ -62,7 +62,7 @@ export const BoardOptions = ({ id }: BoardOptionsProps) => {
         <PopoverClose asChild>
           <Button
             aria-label="Close board options"
-            className="absolute top-2 right-2 h-auto w-auto p-2 text-neutral-600"
+            className="absolute top-2 right-2 size-auto p-2 text-neutral-600"
             variant="ghost"
           >
             <XIcon className="size-4" />

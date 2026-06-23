@@ -1,4 +1,4 @@
-/** Props for the BoardIdPage component */
+/** Props for the ListWrapper component */
 interface ListWrapperProps {
   children: React.ReactNode;
 }
