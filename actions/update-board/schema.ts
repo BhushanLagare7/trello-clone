@@ -6,7 +6,7 @@ export const UpdateBoard = z.object({
       error: "Title is required",
     })
     .min(3, {
-      message: "Title is too short",
+      error: "Title is too short",
     }),
-  id: z.string(),
+  id: z.string().min(1, { error: "ID is required" }),
 });
