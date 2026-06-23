@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 
 import { db } from "@/lib/db";
 
-import ListContainer from "./_components/list-container";
+import { ListContainer } from "./_components/list-container";
 
 /** Props for the BoardIdPage component */
 interface BoardIdPageProps {
@@ -40,6 +40,9 @@ const BoardIdPage = async ({ params }: BoardIdPageProps) => {
           order: "asc", // Maintain user-defined card ordering
         },
       },
+    },
+    orderBy: {
+      order: "asc", // Maintain user-defined list ordering
     },
   });
 
