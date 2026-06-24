@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { CopyCard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -15,7 +17,7 @@ import { InputType, ReturnType } from "./types";
  *
  * Validates authentication and organization membership, finds the card to copy,
  * determines the correct order for the new copy, creates the copy in the database,
- * and revalidates the board page cache to reflect the change.
+ * creates an audit log entry, and revalidates the board page cache to reflect the change.
  *
  * @param data - The input data containing the card ID and board ID
  * @returns The newly created card data, or an error message if the operation fails
@@ -85,6 +87,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           listId: cardToCopy.listId,
         },
       });
+    });
+
+    // Create an audit log entry for the card copy operation.
+    await createAuditLog({
+      entityTitle: card.title,
+      entityId: card.id,
+      entityType: ENTITY_TYPE.CARD,
+      action: ACTION.CREATE,
     });
   } catch {
     return { error: "Failed to copy." };

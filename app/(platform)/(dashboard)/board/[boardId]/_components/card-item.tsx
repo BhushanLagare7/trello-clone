@@ -5,7 +5,7 @@ import { CSSProperties } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 
 import { useCardModal } from "@/hooks/use-card-modal";
-import { Card } from "@/lib/generated/prisma/client";
+import type { Card } from "@/lib/generated/prisma/browser";
 
 /** Props for the CardItem component */
 interface CardItemProps {

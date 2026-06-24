@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { UpdateCard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -14,8 +16,8 @@ import { InputType, ReturnType } from "./types";
  * Handler for updating a card's details.
  *
  * Validates the user's authentication and organization membership,
- * updates the specified card in the database, and revalidates the
- * board page cache to reflect the changes.
+ * updates the specified card in the database, creates an audit log entry,
+ * and revalidates the board page cache to reflect the changes.
  *
  * @param data - The input data containing the card ID, board ID, and fields to update
  * @returns The updated card data, or an error message if the operation fails
@@ -58,6 +60,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           },
         },
       },
+    });
+
+    // Create an audit log entry for the card update operation.
+    await createAuditLog({
+      entityTitle: card.title,
+      entityId: card.id,
+      entityType: ENTITY_TYPE.CARD,
+      action: ACTION.UPDATE,
     });
   } catch {
     // Return an error if the database update operation fails

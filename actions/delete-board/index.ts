@@ -5,8 +5,11 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import type { Board } from "@/lib/generated/prisma/browser";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { DeleteBoard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -14,7 +17,8 @@ import { InputType, ReturnType } from "./types";
 /**
  * Server action handler for deleting a board.
  * Validates authentication, deletes the board from the database,
- * and redirects the user to the organization page on success.
+ * creates an audit log entry, and redirects the user to the organization
+ * page on success.
  *
  * @param data - Validated input containing the board `id` to delete
  * @returns An error message on failure, or redirects on success
@@ -31,13 +35,23 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   const { id } = data;
 
+  let board: Board | undefined;
+
   try {
     // Delete the board, scoped to the current org to prevent unauthorized deletion
-    await db.board.delete({
+    board = await db.board.delete({
       where: {
         id,
         orgId,
       },
+    });
+
+    // Create an audit log entry for the board delete operation.
+    await createAuditLog({
+      entityTitle: board.title,
+      entityId: board.id,
+      entityType: ENTITY_TYPE.BOARD,
+      action: ACTION.DELETE,
     });
   } catch {
     return {

@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { DeleteCard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -14,8 +16,8 @@ import { InputType, ReturnType } from "./types";
  * Handler for deleting a card.
  *
  * Validates authentication and organization membership, deletes the specified
- * card from the database, and revalidates the board page cache to reflect
- * the removal.
+ * card from the database, creates an audit log entry for the delete operation,
+ * and revalidates the board page cache to reflect the removal.
  *
  * @param data - The input data containing the card ID and board ID
  * @returns The deleted card data, or an error message if the operation fails
@@ -57,6 +59,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           },
         },
       },
+    });
+
+    // Create an audit log entry for the card delete operation.
+    await createAuditLog({
+      entityTitle: card.title,
+      entityId: card.id,
+      entityType: ENTITY_TYPE.CARD,
+      action: ACTION.DELETE,
     });
   } catch {
     return {
