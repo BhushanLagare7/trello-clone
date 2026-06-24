@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { UpdateListOrder } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -52,6 +54,16 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     return {
       error: "Failed to reorder.",
     };
+  }
+
+  // Best-effort audit log for the first reordered list; skip when nothing changed.
+  if (lists.length > 0) {
+    await createAuditLog({
+      entityTitle: lists[0].title,
+      entityId: lists[0].id,
+      entityType: ENTITY_TYPE.LIST,
+      action: ACTION.UPDATE,
+    });
   }
 
   // Invalidate the board page cache to reflect the new list order

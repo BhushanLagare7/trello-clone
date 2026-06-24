@@ -4,14 +4,16 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { UpdateList } from "./schema";
 import { InputType, ReturnType } from "./types";
 
 /**
- * Handles updating a list's title within a board.
+ * Handles updating a list's title within a board and creates an audit log entry upon success.
  *
  * @param data - Contains the list `id`, `boardId`, and new `title`
  * @returns The updated list, or an error message
@@ -48,6 +50,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       error: "Failed to update.",
     };
   }
+
+  // Best-effort audit log — failure here must not affect the success response.
+  await createAuditLog({
+    entityTitle: list.title,
+    entityId: list.id,
+    entityType: ENTITY_TYPE.LIST,
+    action: ACTION.UPDATE,
+  });
 
   // Refresh the board page to show the updated list
   revalidatePath(`/board/${boardId}`);

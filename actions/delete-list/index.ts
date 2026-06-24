@@ -4,14 +4,17 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { DeleteList } from "./schema";
 import { InputType, ReturnType } from "./types";
 
 /**
- * Handles deleting a list and all its cards within a board.
+ * Handles deleting a list and all its cards within a board and
+ * creates an audit log entry.
  *
  * @param data - Contains the list `id` and `boardId` to identify the list to delete
  * @returns The deleted list, or an error message
@@ -39,6 +42,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           orgId,
         },
       },
+    });
+
+    // Create an audit log entry for the list delete operation.
+    await createAuditLog({
+      entityTitle: list.title,
+      entityId: list.id,
+      entityType: ENTITY_TYPE.LIST,
+      action: ACTION.DELETE,
     });
   } catch {
     return {

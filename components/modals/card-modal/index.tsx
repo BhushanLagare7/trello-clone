@@ -5,9 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useCardModal } from "@/hooks/use-card-modal";
 import { fetcher } from "@/lib/fetcher";
+import type { AuditLog } from "@/lib/generated/prisma/browser";
 import { CardWithList } from "@/types";
 
 import { Actions } from "./actions";
+import { Activity } from "./activity";
 import { Description } from "./description";
 import { Header } from "./header";
 
@@ -32,6 +34,14 @@ export const CardModal = () => {
     enabled: isOpen && !!id,
   });
 
+  // Fetch audit logs for the card; only runs when the modal is open and an
+  // id is available, preventing a request to /api/cards/${id}/logs on first render.
+  const { data: auditLogsData } = useQuery<AuditLog[]>({
+    queryKey: ["card-logs", id],
+    queryFn: () => fetcher(`/api/cards/${id}/logs`),
+    enabled: isOpen && !!id,
+  });
+
   return (
     // Dialog visibility is controlled by `isOpen`; `onClose` is triggered on dismiss
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -48,6 +58,11 @@ export const CardModal = () => {
                 <Description.Skeleton />
               ) : (
                 <Description data={cardData} />
+              )}
+              {!auditLogsData ? (
+                <Activity.Skeleton />
+              ) : (
+                <Activity items={auditLogsData} />
               )}
             </div>
           </div>

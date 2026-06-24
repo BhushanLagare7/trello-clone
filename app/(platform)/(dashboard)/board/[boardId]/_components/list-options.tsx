@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useAction } from "@/hooks/use-action";
-import { List } from "@/lib/generated/prisma/client";
+import type { List } from "@/lib/generated/prisma/browser";
 
 interface ListOptionsProps {
   /** The list data containing id, title, and boardId */

@@ -8,7 +8,7 @@ import { updateBoard } from "@/actions/update-board";
 import { FormInput } from "@/components/form/form-input";
 import { Button } from "@/components/ui/button";
 import { useAction } from "@/hooks/use-action";
-import { Board } from "@/lib/generated/prisma/client";
+import type { Board } from "@/lib/generated/prisma/browser";
 
 /** Props for the BoardTitleForm component */
 interface BoardTitleFormProps {

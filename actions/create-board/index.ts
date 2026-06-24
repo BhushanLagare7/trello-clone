@@ -4,14 +4,17 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { CreateBoard } from "./schema";
 import { InputType, ReturnType } from "./types";
 
 /**
  * Handles the creation of a new board.
+ * Creates an audit log entry for the board copy operation.
  * Validates user authentication, parses image data,
  * and persists the board to the database.
  *
@@ -73,6 +76,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         imageUserName,
         imageLinkHTML,
       },
+    });
+
+    // Create an audit log entry for the board copy operation.
+    await createAuditLog({
+      entityTitle: board.title,
+      entityId: board.id,
+      entityType: ENTITY_TYPE.BOARD,
+      action: ACTION.CREATE,
     });
   } catch {
     return {

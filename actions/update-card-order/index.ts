@@ -4,15 +4,18 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
+import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
 
 import { UpdateCardOrder } from "./schema";
 import { InputType, ReturnType } from "./types";
 
 /**
  * Server action handler that updates the order and list assignment of multiple
- * cards within a board. Executes all card updates as a single atomic database transaction.
+ * cards within a board. Executes all card updates as a single atomic database transaction
+ * and creates an audit log entry upon success.
  *
  * @param data - Contains the boardId and an array of cards with their new order and listId values
  * @returns The updated cards on success, or an error message on failure
@@ -51,6 +54,16 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
     // Execute all updates atomically to prevent partial reorders
     updatedCards = await db.$transaction(transaction);
+
+    // Only log when there are actual updated cards (no-op reorders have no first element)
+    if (updatedCards.length > 0) {
+      await createAuditLog({
+        entityTitle: updatedCards[0].title,
+        entityId: updatedCards[0].id,
+        entityType: ENTITY_TYPE.CARD,
+        action: ACTION.UPDATE,
+      });
+    }
   } catch {
     return {
       error: "Failed to reorder.",

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ActionState } from "@/lib/create-safe-action";
-import { Board } from "@/lib/generated/prisma/client";
+import type { Board } from "@/lib/generated/prisma/browser";
 
 import { CreateBoard } from "./schema";
 
