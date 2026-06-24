@@ -46,6 +46,12 @@ export async function GET(
       },
     });
 
+    // Return 404 when no card is found so callers can distinguish "not found"
+    // from a successful empty response (which would leave the modal stuck loading).
+    if (!card) {
+      return new NextResponse("Card not found", { status: 404 });
+    }
+
     return NextResponse.json(card);
   } catch {
     // Return a 500 response for any unexpected server errors

@@ -30,12 +30,15 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  // Destructure the input data
-  const { id, boardId } = data;
+  // boardId from the client payload is not trusted for revalidation.
+  const { id } = data;
   let card;
+  // Will be assigned from the source card's parent board after a successful lookup.
+  let actualBoardId: string | undefined;
 
   try {
-    // Attempt to find the card to copy, scoped to the authenticated organization
+    // Fetch the source card including the parent board so we can derive the
+    // correct revalidation path without trusting the client-supplied boardId.
     const cardToCopy = await db.card.findUnique({
       where: {
         id,
@@ -45,40 +48,51 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           },
         },
       },
+      include: {
+        list: {
+          include: {
+            board: {
+              select: { id: true },
+            },
+          },
+        },
+      },
     });
 
-    // Handle case where the card to copy is not found
     if (!cardToCopy) {
       return { error: "Card not found" };
     }
 
-    // Find the last card in the same list to determine the new card's order
-    const lastCard = await db.card.findFirst({
-      where: { listId: cardToCopy.listId },
-      orderBy: { order: "desc" },
-      select: { order: true },
-    });
+    // Capture the real board id before entering the transaction.
+    actualBoardId = cardToCopy.list.board.id;
 
-    // Calculate the new order (one greater than the last card, or 1 if no cards exist)
-    const newOrder = lastCard ? lastCard.order + 1 : 1;
+    // Wrap the order-read and card-create in a transaction so concurrent copies
+    // never observe the same "last" order and produce duplicate order values.
+    card = await db.$transaction(async (tx) => {
+      const lastCard = await tx.card.findFirst({
+        where: { listId: cardToCopy.listId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
 
-    // Create the new copy of the card with the calculated order
-    card = await db.card.create({
-      data: {
-        title: `${cardToCopy.title} - Copy`,
-        description: cardToCopy.description,
-        order: newOrder,
-        listId: cardToCopy.listId,
-      },
+      const newOrder = lastCard ? lastCard.order + 1 : 1;
+
+      return tx.card.create({
+        data: {
+          title: `${cardToCopy.title} - Copy`,
+          description: cardToCopy.description,
+          order: newOrder,
+          listId: cardToCopy.listId,
+        },
+      });
     });
   } catch {
-    return {
-      error: "Failed to copy.",
-    };
+    return { error: "Failed to copy." };
   }
 
-  // Revalidate the board page to update the UI with the new card
-  revalidatePath(`/board/${boardId}`);
+  // Derive the board path from the source card rather than the client payload
+  // to ensure we revalidate the correct board.
+  revalidatePath(`/board/${actualBoardId}`);
   // Return the newly created card data
   return { data: card };
 };

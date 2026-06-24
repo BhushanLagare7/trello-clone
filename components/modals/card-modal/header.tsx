@@ -86,7 +86,11 @@ export const Header = ({ data }: HeaderProps) => {
       <div className="w-full">
         {/* Inline editable form for the card title */}
         <form action={onSubmit}>
+          {/* key={title} remounts the input with the updated defaultValue whenever
+              the title state changes after a successful save, keeping the visible
+              field in sync with the normalized server value. */}
           <FormInput
+            key={title}
             ref={inputRef}
             className="focus-visible:border-input relative -left-1.5 mb-0.5 w-[95%] truncate border-transparent bg-transparent px-1 text-xl font-semibold text-neutral-700 focus-visible:bg-white"
             defaultValue={title}

@@ -126,11 +126,18 @@ export const Description = ({ data }: DescriptionProps) => {
             </div>
           </form>
         ) : (
-          /* View mode: clicking this div switches to edit mode */
+          /* View mode: clicking or keyboard-activating this element switches to edit mode */
           <div
             className="min-h-19.5 rounded-md bg-neutral-200 px-3.5 py-3 text-sm font-medium"
             role="button"
+            tabIndex={0}
             onClick={enableEditing}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                enableEditing();
+              }
+            }}
           >
             {/* Display existing description or a placeholder prompt */}
             {data.description ?? "Add a more detailed description..."}

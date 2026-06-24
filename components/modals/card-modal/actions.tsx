@@ -76,10 +76,10 @@ export const Actions = ({ data }: ActionsProps) => {
   return (
     <div className="mt-2 space-y-2">
       <p className="text-xs font-semibold">Actions</p>
-      {/* Copy button: disabled while the copy action is in progress */}
+      {/* Copy button: disabled while either action is in progress to prevent concurrent mutations */}
       <Button
         className="w-full justify-start"
-        disabled={isLoadingCopy}
+        disabled={isLoadingCopy || isLoadingDelete}
         size="inline"
         variant="gray"
         onClick={onCopy}
@@ -87,10 +87,10 @@ export const Actions = ({ data }: ActionsProps) => {
         <CopyIcon className="mr-2 size-4" />
         Copy
       </Button>
-      {/* Delete button: disabled while the delete action is in progress */}
+      {/* Delete button: disabled while either action is in progress to prevent concurrent mutations */}
       <Button
         className="w-full justify-start"
-        disabled={isLoadingDelete}
+        disabled={isLoadingCopy || isLoadingDelete}
         size="inline"
         variant="gray"
         onClick={onDelete}

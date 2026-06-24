@@ -30,18 +30,30 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  // Destructure the input data
-  const { id, boardId } = data;
+  // Destructure the input data (boardId is intentionally unused; the actual
+  // board path is derived from the deleted card record after the mutation)
+  const { id } = data;
   let card;
 
   try {
-    // Delete the card, scoped to the authenticated organization
+    // Delete the card, scoped to the authenticated organization.
+    // Include the parent board so we can derive the revalidation path from the
+    // actual record rather than the client-supplied boardId.
     card = await db.card.delete({
       where: {
         id,
         list: {
           board: {
             orgId, // Ensures the card belongs to the user's organization
+          },
+        },
+      },
+      include: {
+        list: {
+          include: {
+            board: {
+              select: { id: true },
+            },
           },
         },
       },
@@ -52,8 +64,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  // Revalidate the board page to reflect the deleted card
-  revalidatePath(`/board/${boardId}`);
+  // Derive the board path from the deleted record rather than the client payload
+  // to ensure we revalidate the correct board.
+  revalidatePath(`/board/${card.list.board.id}`);
   // Return the deleted card data
   return { data: card };
 };

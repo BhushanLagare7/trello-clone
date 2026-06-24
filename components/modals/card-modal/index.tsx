@@ -24,10 +24,12 @@ export const CardModal = () => {
   const isOpen = useCardModal((state) => state.isOpen);
   const onClose = useCardModal((state) => state.onClose);
 
-  // Fetch card data using React Query; refetches automatically when `id` changes
+  // Fetch card data using React Query; only runs when the modal is open and an
+  // id is available, preventing a request to /api/cards/undefined on first render.
   const { data: cardData } = useQuery<CardWithList>({
     queryKey: ["card", id],
     queryFn: () => fetcher(`/api/cards/${id}`),
+    enabled: isOpen && !!id,
   });
 
   return (

@@ -30,12 +30,15 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  // Destructure id and boardId separately; remaining fields are the update payload
-  const { id, boardId, ...values } = data;
+  // boardId is intentionally not used for revalidation — the actual board path
+  // is derived from the updated card record after the mutation succeeds.
+  const { id, title, description } = data;
   let card;
 
   try {
-    // Update the card, scoped to the authenticated organization to prevent unauthorized edits
+    // Update the card, scoped to the authenticated organization to prevent unauthorized edits.
+    // Include the parent board so we can derive the revalidation path from the
+    // actual record rather than the client-supplied boardId.
     card = await db.card.update({
       where: {
         id,
@@ -45,8 +48,15 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           },
         },
       },
-      data: {
-        ...values, // Apply the remaining fields as the update payload
+      data: { title, description },
+      include: {
+        list: {
+          include: {
+            board: {
+              select: { id: true },
+            },
+          },
+        },
       },
     });
   } catch {
@@ -56,8 +66,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  // Revalidate the board page to reflect the updated card details
-  revalidatePath(`/board/${boardId}`);
+  // Derive the board path from the updated record rather than the client payload
+  // to ensure we revalidate the correct board.
+  revalidatePath(`/board/${card.list.board.id}`);
   return { data: card };
 };
 
