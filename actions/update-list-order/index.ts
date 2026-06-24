@@ -56,6 +56,16 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
+  // Best-effort audit log for the first reordered list; skip when nothing changed.
+  if (lists.length > 0) {
+    await createAuditLog({
+      entityTitle: lists[0].title,
+      entityId: lists[0].id,
+      entityType: ENTITY_TYPE.LIST,
+      action: ACTION.UPDATE,
+    });
+  }
+
   // Invalidate the board page cache to reflect the new list order
   revalidatePath(`/board/${boardId}`);
   return { data: lists };

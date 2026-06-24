@@ -88,17 +88,17 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         },
       });
     });
-
-    // Create an audit log entry for the card copy operation.
-    await createAuditLog({
-      entityTitle: card.title,
-      entityId: card.id,
-      entityType: ENTITY_TYPE.CARD,
-      action: ACTION.CREATE,
-    });
   } catch {
     return { error: "Failed to copy." };
   }
+
+  // Best-effort audit log — failure here must not affect the success response.
+  await createAuditLog({
+    entityTitle: card.title,
+    entityId: card.id,
+    entityType: ENTITY_TYPE.CARD,
+    action: ACTION.CREATE,
+  });
 
   // Derive the board path from the source card rather than the client payload
   // to ensure we revalidate the correct board.

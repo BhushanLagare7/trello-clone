@@ -76,4 +76,9 @@ model AuditLog {
   userName    String      @db.Text
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  // Supports the org activity list query (ORDER BY createdAt DESC WHERE orgId = ?)
+  @@index([orgId])
+  // Supports the card logs API query (WHERE orgId = ? AND entityId = ? AND entityType = ? ORDER BY createdAt DESC)
+  @@index([orgId, entityId, entityType])
 }

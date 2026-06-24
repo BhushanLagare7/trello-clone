@@ -45,19 +45,19 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         title,
       },
     });
-
-    // Create an audit log entry for the list update operation.
-    await createAuditLog({
-      entityTitle: list.title,
-      entityId: list.id,
-      entityType: ENTITY_TYPE.LIST,
-      action: ACTION.UPDATE,
-    });
   } catch {
     return {
       error: "Failed to update.",
     };
   }
+
+  // Best-effort audit log — failure here must not affect the success response.
+  await createAuditLog({
+    entityTitle: list.title,
+    entityId: list.id,
+    entityType: ENTITY_TYPE.LIST,
+    action: ACTION.UPDATE,
+  });
 
   // Refresh the board page to show the updated list
   revalidatePath(`/board/${boardId}`);

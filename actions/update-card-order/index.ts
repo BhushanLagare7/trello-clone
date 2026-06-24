@@ -55,13 +55,15 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     // Execute all updates atomically to prevent partial reorders
     updatedCards = await db.$transaction(transaction);
 
-    // Create an audit log entry for the card update operation.
-    await createAuditLog({
-      entityTitle: updatedCards[0].title,
-      entityId: updatedCards[0].id,
-      entityType: ENTITY_TYPE.CARD,
-      action: ACTION.UPDATE,
-    });
+    // Only log when there are actual updated cards (no-op reorders have no first element)
+    if (updatedCards.length > 0) {
+      await createAuditLog({
+        entityTitle: updatedCards[0].title,
+        entityId: updatedCards[0].id,
+        entityType: ENTITY_TYPE.CARD,
+        action: ACTION.UPDATE,
+      });
+    }
   } catch {
     return {
       error: "Failed to reorder.",
