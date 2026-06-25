@@ -34,18 +34,18 @@ Taskify is a Trello-inspired project management tool that lets teams organize wo
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| ⚡ Framework | [Next.js 16](https://nextjs.org/) (App Router) |
-| 🟦 Language | [TypeScript 5](https://www.typescriptlang.org/) |
-| 🎨 UI | [React 19](https://react.dev/), [Tailwind CSS 4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/) |
-| 🔐 Auth | [Clerk](https://clerk.com/) |
-| 🗄️ Database | [PostgreSQL](https://www.postgresql.org/) via [Prisma 7](https://www.prisma.io/) |
-| 💳 Payments | [Stripe](https://stripe.com/) |
-| 🧠 State | [Zustand](https://zustand.docs.pmnd.rs/), [TanStack Query](https://tanstack.com/query) |
-| 🖱️ Drag & Drop | [@hello-pangea/dnd](https://github.com/hello-pangea/dnd) |
-| 🖼️ Images | [Unsplash API](https://unsplash.com/developers) |
-| ✅ Validation | [Zod 4](https://zod.dev/) |
+| Layer          | Technology                                                                                                      |
+| -------------- | --------------------------------------------------------------------------------------------------------------- |
+| ⚡ Framework   | [Next.js 16](https://nextjs.org/) (App Router)                                                                  |
+| 🟦 Language    | [TypeScript 5](https://www.typescriptlang.org/)                                                                 |
+| 🎨 UI          | [React 19](https://react.dev/), [Tailwind CSS 4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/) |
+| 🔐 Auth        | [Clerk](https://clerk.com/)                                                                                     |
+| 🗄️ Database    | [PostgreSQL](https://www.postgresql.org/) via [Prisma 7](https://www.prisma.io/)                                |
+| 💳 Payments    | [Stripe](https://stripe.com/)                                                                                   |
+| 🧠 State       | [Zustand](https://zustand.docs.pmnd.rs/), [TanStack Query](https://tanstack.com/query)                          |
+| 🖱️ Drag & Drop | [@hello-pangea/dnd](https://github.com/hello-pangea/dnd)                                                        |
+| 🖼️ Images      | [Unsplash API](https://unsplash.com/developers)                                                                 |
+| ✅ Validation  | [Zod 4](https://zod.dev/)                                                                                       |
 
 ## 🚀 Getting Started
 
@@ -122,6 +122,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 > [!TIP]
 > For the Stripe webhook in local development, use the [Stripe CLI](https://stripe.com/docs/stripe-cli) to forward events:
+>
 > ```bash
 > stripe listen --forward-to localhost:3000/api/webhook
 > ```
@@ -149,13 +150,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## 📜 Available Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | 🔄 Start the development server |
-| `npm run build` | 📦 Create a production build |
-| `npm start` | ▶️ Run the production server |
-| `npm run lint` | 🔎 Run ESLint |
-| `npm run lint:fix` | 🔧 Run ESLint with auto-fix |
+| Command            | Description                     |
+| ------------------ | ------------------------------- |
+| `npm run dev`      | 🔄 Start the development server |
+| `npm run build`    | 📦 Create a production build    |
+| `npm start`        | ▶️ Run the production server    |
+| `npm run lint`     | 🔎 Run ESLint                   |
+| `npm run lint:fix` | 🔧 Run ESLint with auto-fix     |
 
 ## 🌐 Deployment
 
@@ -165,6 +166,3 @@ The easiest way to deploy is with [Vercel](https://vercel.com/):
 2. Import the project into Vercel.
 3. Add all environment variables in the Vercel dashboard.
 4. Set up the Stripe webhook endpoint to point to `https://your-domain.com/api/webhook`.
-
-> [!IMPORTANT]
-> Update `siteConfig.url` in `config/site.ts` and `NEXT_PUBLIC_APP_URL` to your production domain before deploying.
