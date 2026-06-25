@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
 import { Separator } from "@/components/ui/separator";
+import { checkSubscription } from "@/lib/subscription";
 
 import { Info } from "../_components/info";
 
@@ -18,10 +19,13 @@ import { ActivityList } from "./_components/activity-list";
  * - Calls the `ActivityList` component to display the list of audit logs.
  */
 const ActivityPage = async () => {
+  // Check if the user is a pro member
+  const isPro = await checkSubscription();
+
   return (
     <div className="w-full">
       {/* Organization information section */}
-      <Info />
+      <Info isPro={isPro} />
       <Separator className="my-2" />
 
       {/* Activity list with skeleton loading */}

@@ -7,11 +7,17 @@ import { CreditCard } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
+/** Props for the Info component */
+interface InfoProps {
+  // Whether the organization is a Pro plan
+  isPro: boolean;
+}
+
 /**
  * Displays basic information about the active Clerk organization.
  * Includes the logo, name, and billing plan status.
  */
-export const Info = () => {
+export const Info = ({ isPro }: InfoProps) => {
   const { organization, isLoaded } = useOrganization();
 
   // Show loading state while Clerk is initializing
@@ -38,7 +44,7 @@ export const Info = () => {
         <p className="text-xl font-semibold">{organization.name}</p>
         <div className="text-muted-foreground flex items-center text-xs">
           <CreditCard className="mr-1 size-3" />
-          Free
+          {isPro ? "Pro" : "Free"}
         </div>
       </div>
     </div>

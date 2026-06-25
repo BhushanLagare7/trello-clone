@@ -14,7 +14,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { BOARD_LIMIT_ERROR } from "@/constants/boards";
 import { useAction } from "@/hooks/use-action";
+import { useProModal } from "@/hooks/use-pro-modal";
 
 import { FormInput } from "./form-input";
 import { FormPicker } from "./form-picker";
@@ -46,6 +48,7 @@ export const FormPopover = ({
   sideOffset = 0,
 }: FormPopoverProps) => {
   const router = useRouter();
+  const proModal = useProModal();
 
   // Ref for the close button, used to programmatically close the popover on success
   const closeRef = useRef<ComponentRef<"button">>(null);
@@ -57,9 +60,12 @@ export const FormPopover = ({
       closeRef.current?.click();
       router.push(`/board/${data.id}`);
     },
-    /** Displays an error toast notification on failure */
+    /** Displays an error toast and opens the upgrade modal only for board-limit errors */
     onError: (error) => {
       toast.error(error);
+      if (error === BOARD_LIMIT_ERROR) {
+        proModal.onOpen();
+      }
     },
   });
 

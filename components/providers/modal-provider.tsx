@@ -3,6 +3,7 @@
 import { useIsClient } from "usehooks-ts";
 
 import { CardModal } from "@/components/modals/card-modal";
+import { ProModal } from "@/components/modals/pro-modal";
 
 export const ModalProvider = () => {
   // Ensures component only renders on client to prevent hydration mismatch
@@ -15,6 +16,7 @@ export const ModalProvider = () => {
   return (
     <>
       <CardModal />
+      <ProModal />
     </>
   );
 };

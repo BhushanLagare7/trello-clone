@@ -38,12 +38,27 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   let board: Board | undefined;
 
   try {
-    // Delete the board, scoped to the current org to prevent unauthorized deletion
-    board = await db.board.delete({
-      where: {
-        id,
-        orgId,
-      },
+    // Run the board deletion and quota decrement in a single transaction so
+    // a failure in either operation rolls back both, keeping state consistent.
+    board = await db.$transaction(async (tx) => {
+      const deleted = await tx.board.delete({
+        where: {
+          id,
+          orgId,
+        },
+      });
+
+      // Decrement quota only if an OrgLimit record already exists.
+      // A missing record is treated as zero used boards — do not create one.
+      const orgLimit = await tx.orgLimit.findUnique({ where: { orgId } });
+      if (orgLimit) {
+        await tx.orgLimit.update({
+          where: { orgId },
+          data: { count: orgLimit.count > 0 ? orgLimit.count - 1 : 0 },
+        });
+      }
+
+      return deleted;
     });
 
     // Create an audit log entry for the board delete operation.
