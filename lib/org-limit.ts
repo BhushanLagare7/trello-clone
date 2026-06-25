@@ -82,12 +82,8 @@ export const decreaseAvailableCount = async (): Promise<void> => {
       where: { orgId },
       data: { count: orgLimit.count > 0 ? orgLimit.count - 1 : 0 },
     });
-  } else {
-    // Create a new record with initial count of 1 if none exists
-    await db.orgLimit.create({
-      data: { orgId, count: 1 },
-    });
   }
+  // If no OrgLimit record exists, there are no boards to decrement — no-op.
 };
 
 /**

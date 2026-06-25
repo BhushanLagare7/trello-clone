@@ -39,9 +39,11 @@ export function formatOrgSlug(slug: string): string {
 
 /**
  * Constructs an absolute URL for the given path.
+ * Uses the URL constructor to safely join the base URL and path,
+ * preventing double-slash or malformed URL issues from raw string concatenation.
  * @param path - The path to construct the URL from.
  * @returns The absolute URL as a string.
  */
 export function absoluteUrl(path: string) {
-  return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
+  return new URL(path, process.env.NEXT_PUBLIC_APP_URL!).toString();
 }

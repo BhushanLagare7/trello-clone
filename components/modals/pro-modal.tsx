@@ -23,8 +23,14 @@ export const ProModal = () => {
   // Execute the Stripe redirect action, with success and error callbacks
   const { execute, isLoading } = useAction(stripeRedirect, {
     onSuccess: (data) => {
-      // Redirect to the Stripe checkout/billing portal URL on success
-      window.location.href = data;
+      // Only navigate when the action returned a non-empty URL.
+      // An empty string means the Stripe session could not be created,
+      // so treat it as a failure rather than redirecting to a blank page.
+      if (data) {
+        window.location.href = data;
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
     },
     onError: (error) => {
       toast.error(error);

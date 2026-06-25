@@ -23,8 +23,8 @@ const OrganizationIdPage = async () => {
       <div className="px-2 md:px-4">
         {/* Board list with skeleton loading */}
         <Suspense fallback={<BoardList.Skeleton />}>
-          {/* Fetches and displays the board list */}
-          <BoardList />
+          {/* Passes the already-resolved isPro flag to avoid a duplicate subscription query */}
+          <BoardList isPro={isPro} />
         </Suspense>
       </div>
     </div>

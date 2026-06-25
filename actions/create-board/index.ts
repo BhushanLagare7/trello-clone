@@ -4,11 +4,11 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { BOARD_LIMIT_ERROR, MAX_FREE_BOARDS } from "@/constants/boards";
 import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
 import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
-import { hasAvailableCount, incrementAvailableCount } from "@/lib/org-limit";
 import { checkSubscription } from "@/lib/subscription";
 
 import { CreateBoard } from "./schema";
@@ -34,16 +34,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  const canCreate = await hasAvailableCount();
   const isPro = await checkSubscription();
-
-  // Return an error if the user has reached their free board limit and is not a pro user
-  if (!canCreate && !isPro) {
-    return {
-      error:
-        "You have reached your limit of free boards. Please upgrade to create more.",
-    };
-  }
 
   const { title, image } = data;
 
@@ -77,37 +68,64 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   let board;
 
-  // Attempt to create the board in the database
+  // Attempt to create the board in the database.
+  // The quota check, board insert, and count increment are wrapped in a single
+  // transaction so they either all succeed or all roll back together.
   try {
-    board = await db.board.create({
-      data: {
-        title,
-        orgId,
-        imageId,
-        imageThumbUrl,
-        imageFullUrl,
-        imageUserName,
-        imageLinkHTML,
-      },
-    });
+    board = await db.$transaction(async (tx) => {
+      // Re-check the free-tier quota inside the transaction to close the
+      // TOCTOU window between the limit check and the actual insert.
+      if (!isPro) {
+        const orgLimit = await tx.orgLimit.findUnique({ where: { orgId } });
+        if (orgLimit && orgLimit.count >= MAX_FREE_BOARDS) {
+          throw new Error(BOARD_LIMIT_ERROR);
+        }
+      }
 
-    // Increment the available board count for the organization if the user is not a pro
-    if (!isPro) {
-      await incrementAvailableCount();
+      const newBoard = await tx.board.create({
+        data: {
+          title,
+          orgId,
+          imageId,
+          imageThumbUrl,
+          imageFullUrl,
+          imageUserName,
+          imageLinkHTML,
+        },
+      });
+
+      // Always track board count for all orgs (pro and free) so quota
+      // figures are consistent regardless of subscription status.
+      const orgLimit = await tx.orgLimit.findUnique({ where: { orgId } });
+      if (orgLimit) {
+        await tx.orgLimit.update({
+          where: { orgId },
+          data: { count: orgLimit.count + 1 },
+        });
+      } else {
+        await tx.orgLimit.create({ data: { orgId, count: 1 } });
+      }
+
+      return newBoard;
+    });
+  } catch (err) {
+    // Surface the board-limit error with its original message so the client
+    // can distinguish it from generic failures.
+    if (err instanceof Error && err.message === BOARD_LIMIT_ERROR) {
+      return { error: BOARD_LIMIT_ERROR };
     }
-
-    // Create an audit log entry for the board copy operation.
-    await createAuditLog({
-      entityTitle: board.title,
-      entityId: board.id,
-      entityType: ENTITY_TYPE.BOARD,
-      action: ACTION.CREATE,
-    });
-  } catch {
     return {
       error: "Failed to create.",
     };
   }
+
+  // Create an audit log entry for the board copy operation.
+  await createAuditLog({
+    entityTitle: board.title,
+    entityId: board.id,
+    entityType: ENTITY_TYPE.BOARD,
+    action: ACTION.CREATE,
+  });
 
   // Revalidate the board page to reflect the newly created board
   revalidatePath(`/board/${board.id}`);

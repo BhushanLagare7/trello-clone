@@ -11,8 +11,10 @@ import { stripe } from "@/lib/stripe";
  *
  * Handles incoming Stripe webhook events.
  * Processes the following events:
- * - `checkout.session.completed`: Creates a new organization subscription record.
+ * - `checkout.session.completed`: Upserts a new organization subscription record.
  * - `invoice.payment_succeeded`: Updates the subscription's billing period and price.
+ *
+ * Both handlers are idempotent: safe to retry and tolerant of out-of-order delivery.
  *
  * @param {Request} req - The incoming webhook request from Stripe.
  * @returns {NextResponse} 200 on success, 400 on validation or processing errors.
@@ -51,14 +53,25 @@ export async function POST(req: Request): Promise<NextResponse<unknown>> {
       return new NextResponse("Org ID is required", { status: 400 });
     }
 
-    // Create a new subscription record in the database for the organization
-    await db.orgSubscription.create({
-      data: {
-        orgId: session?.metadata?.orgId,
+    // Upsert the subscription record so retried or duplicate deliveries are safe.
+    // Keyed on orgId (the business identifier) to handle the case where the row
+    // was already written by a previous delivery of the same event.
+    await db.orgSubscription.upsert({
+      where: { orgId: session.metadata.orgId },
+      create: {
+        orgId: session.metadata.orgId,
         stripeSubscriptionId: subscription.id,
         stripeCustomerId: subscription.customer as string,
         stripePriceId: subscription.items.data[0].price.id,
         // Convert Unix timestamp (seconds) to a JavaScript Date object (milliseconds)
+        stripeCurrentPeriodEnd: new Date(
+          subscription.items.data[0].current_period_end * 1000,
+        ),
+      },
+      update: {
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: subscription.customer as string,
+        stripePriceId: subscription.items.data[0].price.id,
         stripeCurrentPeriodEnd: new Date(
           subscription.items.data[0].current_period_end * 1000,
         ),
@@ -72,11 +85,11 @@ export async function POST(req: Request): Promise<NextResponse<unknown>> {
       session.subscription as string,
     );
 
-    // Update the subscription record to reflect the new billing period and price
-    await db.orgSubscription.update({
-      where: {
-        stripeSubscriptionId: subscription.id,
-      },
+    // updateMany is idempotent: it updates matching rows and returns { count: 0 }
+    // instead of throwing when the subscription record does not exist yet
+    // (e.g. an invoice event delivered before the checkout.session.completed event).
+    await db.orgSubscription.updateMany({
+      where: { stripeSubscriptionId: subscription.id },
       data: {
         stripePriceId: subscription.items.data[0].price.id,
         // Convert Unix timestamp (seconds) to a JavaScript Date object (milliseconds)

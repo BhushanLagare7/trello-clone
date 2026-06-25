@@ -10,7 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MAX_FREE_BOARDS } from "@/constants/boards";
 import { db } from "@/lib/db";
 import { getAvailableCount } from "@/lib/org-limit";
-import { checkSubscription } from "@/lib/subscription";
+
+interface BoardListProps {
+  /** Whether the organization has an active Pro subscription. */
+  isPro: boolean;
+}
 
 /**
  * BoardList Component
@@ -22,10 +26,11 @@ import { checkSubscription } from "@/lib/subscription";
  * - Redirects unauthenticated users (or users without an active org) to "/select-org"
  * - Boards are fetched from the database and sorted by creation date (newest first)
  * - Includes a "Create new board" button with a board limit hint for free workspaces
+ * - `isPro` is passed in from the parent page to avoid a duplicate subscription query
  *
  * @returns A responsive grid of board links and a create board button
  */
-export const BoardList = async () => {
+export const BoardList = async ({ isPro }: BoardListProps) => {
   const { orgId } = await auth();
 
   // Redirect to org selection if no active organization is found
@@ -45,8 +50,10 @@ export const BoardList = async () => {
 
   // Calculate the number of available board slots based on the user's organization limit
   const availableCount = await getAvailableCount();
-  // Check if the user is subscribed to a pro plan
-  const isPro = await checkSubscription();
+
+  // Remaining free slots — clamped to zero so the label never goes negative
+  // when availableCount somehow exceeds the cap (e.g. data imported from outside the app).
+  const remainingSlots = Math.max(0, MAX_FREE_BOARDS - availableCount);
 
   return (
     <div className="space-y-4">
@@ -81,16 +88,14 @@ export const BoardList = async () => {
             <p className="text-sm">Create new board</p>
             {/* Display the number of available board slots or "Unlimited" for pro users */}
             <span className="text-xs">
-              {isPro
-                ? "Unlimited"
-                : `${MAX_FREE_BOARDS - availableCount} remaining`}
+              {isPro ? "Unlimited" : `${remainingSlots} remaining`}
             </span>
             {/* Tooltip explaining the board limit for free workspaces */}
             <Hint
               description={
                 isPro
                   ? "You have unlimited board slots for your Pro workspace."
-                  : "Free Workspaces can have up to 5 open boards. For unlimited boards upgrade this workspace."
+                  : `Free Workspaces can have up to ${MAX_FREE_BOARDS} open boards. For unlimited boards upgrade this workspace.`
               }
               sideOffset={40}
             >
@@ -113,7 +118,7 @@ export const BoardList = async () => {
  * @example
  * // Usage with React Suspense
  * <Suspense fallback={<BoardList.Skeleton />}>
- *   <BoardList />
+ *   <BoardList isPro={isPro} />
  * </Suspense>
  */
 BoardList.Skeleton = function SkeletonBoardList() {
