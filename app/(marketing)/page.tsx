@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import Link from "next/link";
 
@@ -6,11 +7,26 @@ import { MedalIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { JsonLd } from "./_components/json-ld";
+
 // Load Poppins font with all weights for body text
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
+
+/**
+ * Page-specific metadata for the marketing landing page.
+ * Overrides the root layout's default title with an SEO-optimized one.
+ */
+export const metadata: Metadata = {
+  title: "Taskify – Collaborate, Manage & Move Work Forward",
+  description:
+    "Taskify helps teams collaborate, manage projects, and reach new productivity peaks. From high rises to the home office – accomplish it all with Taskify.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 /**
  * MarketingPage: The landing page component featuring the value proposition,
@@ -19,6 +35,8 @@ const poppins = Poppins({
 const MarketingPage = () => {
   return (
     <div className="flex flex-col items-center justify-center">
+      <JsonLd />
+
       {/* Hero Header Section */}
       <div className="flex flex-col items-center justify-center font-bold">
         <div className="mb-4 flex items-center rounded-full border bg-amber-100 p-4 text-amber-700 uppercase shadow-sm">
@@ -54,3 +72,4 @@ const MarketingPage = () => {
 };
 
 export default MarketingPage;
+

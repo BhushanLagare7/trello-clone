@@ -1,8 +1,21 @@
+import type { Metadata } from "next";
+
 import { ClerkProvider } from "@clerk/nextjs";
 
 import { ModalProvider } from "@/components/providers/modal-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
+
+/**
+ * Prevents search engines from indexing authenticated platform pages
+ * (dashboards, boards, settings, etc.) since they require sign-in.
+ */
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 /**
  * Root Layout for Platform Routes
