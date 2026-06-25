@@ -10,6 +10,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
 import type { Board } from "@/lib/generated/prisma/browser";
 import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
+import { decreaseAvailableCount } from "@/lib/org-limit";
 
 import { DeleteBoard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -45,6 +46,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         orgId,
       },
     });
+
+    // Decrement the available board count for the organization
+    await decreaseAvailableCount();
 
     // Create an audit log entry for the board delete operation.
     await createAuditLog({

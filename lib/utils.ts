@@ -36,3 +36,12 @@ export function formatOrgSlug(slug: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 }
+
+/**
+ * Constructs an absolute URL for the given path.
+ * @param path - The path to construct the URL from.
+ * @returns The absolute URL as a string.
+ */
+export function absoluteUrl(path: string) {
+  return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
+}

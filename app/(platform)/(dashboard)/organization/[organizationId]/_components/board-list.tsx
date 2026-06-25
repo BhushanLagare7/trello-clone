@@ -7,7 +7,10 @@ import { HelpCircleIcon, User2Icon } from "lucide-react";
 import { FormPopover } from "@/components/form/form-popover";
 import { Hint } from "@/components/hint";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MAX_FREE_BOARDS } from "@/constants/boards";
 import { db } from "@/lib/db";
+import { getAvailableCount } from "@/lib/org-limit";
+import { checkSubscription } from "@/lib/subscription";
 
 /**
  * BoardList Component
@@ -40,6 +43,11 @@ export const BoardList = async () => {
     },
   });
 
+  // Calculate the number of available board slots based on the user's organization limit
+  const availableCount = await getAvailableCount();
+  // Check if the user is subscribed to a pro plan
+  const isPro = await checkSubscription();
+
   return (
     <div className="space-y-4">
       {/* Section header */}
@@ -71,11 +79,19 @@ export const BoardList = async () => {
             role="button"
           >
             <p className="text-sm">Create new board</p>
-            {/* Display remaining board slots available to the user */}
-            <span className="text-xs">5 remaining</span>
+            {/* Display the number of available board slots or "Unlimited" for pro users */}
+            <span className="text-xs">
+              {isPro
+                ? "Unlimited"
+                : `${MAX_FREE_BOARDS - availableCount} remaining`}
+            </span>
             {/* Tooltip explaining the board limit for free workspaces */}
             <Hint
-              description="Free Workspaces can have up to 5 open boards. For unlimited boards upgrade this workspace."
+              description={
+                isPro
+                  ? "You have unlimited board slots for your Pro workspace."
+                  : "Free Workspaces can have up to 5 open boards. For unlimited boards upgrade this workspace."
+              }
               sideOffset={40}
             >
               <HelpCircleIcon className="absolute right-2 bottom-2 size-3.5" />

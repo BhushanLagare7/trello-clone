@@ -8,6 +8,8 @@ import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { db } from "@/lib/db";
 import { ACTION, ENTITY_TYPE } from "@/lib/generated/prisma/enums";
+import { hasAvailableCount, incrementAvailableCount } from "@/lib/org-limit";
+import { checkSubscription } from "@/lib/subscription";
 
 import { CreateBoard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -29,6 +31,17 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   if (!userId || !orgId) {
     return {
       error: "Unauthorized",
+    };
+  }
+
+  const canCreate = await hasAvailableCount();
+  const isPro = await checkSubscription();
+
+  // Return an error if the user has reached their free board limit and is not a pro user
+  if (!canCreate && !isPro) {
+    return {
+      error:
+        "You have reached your limit of free boards. Please upgrade to create more.",
     };
   }
 
@@ -77,6 +90,11 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         imageLinkHTML,
       },
     });
+
+    // Increment the available board count for the organization if the user is not a pro
+    if (!isPro) {
+      await incrementAvailableCount();
+    }
 
     // Create an audit log entry for the board copy operation.
     await createAuditLog({
